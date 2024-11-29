@@ -22,9 +22,7 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 public class GameScreen implements Screen {
     final Drop game;
 
-    private SpriteBatch batch;
     private Texture image;
-    FitViewport viewport;
     Texture backgroundTexture;
     Texture bucketTexture;
     Sprite bucketSprite;
@@ -77,7 +75,7 @@ public class GameScreen implements Screen {
 
     @Override
     public void resize(int width, int height) {
-        viewport.update(width, height, true); // true centers the camera
+        game.viewport.update(width, height, true); // true centers the camera
     }
 
     private void input() {
@@ -95,7 +93,7 @@ public class GameScreen implements Screen {
         // Mouse Controls here
         if (Gdx.input.isTouched()) {
             touchPos.set(Gdx.input.getX(), Gdx.input.getY()); // Get where the touch happened on screen
-            viewport.unproject(touchPos); // Convert the units to the world units of the viewport
+            game.viewport.unproject(touchPos); // Convert the units to the world units of the viewport
             bucketSprite.setCenterX(touchPos.x); // Change the horizontally centered position of the bucket
         }
 
@@ -104,8 +102,8 @@ public class GameScreen implements Screen {
     private void createGold() {
         float dropHeight = 1f;
         float dropWidth = 1f;
-        float worldWidth = viewport.getWorldWidth();
-        float worldHeight = viewport.getWorldHeight();
+        float worldWidth = game.viewport.getWorldWidth();
+        float worldHeight = game.viewport.getWorldHeight();
 
         // Create gold drop
         Sprite dropGold = new Sprite(coinTexture);
@@ -117,8 +115,8 @@ public class GameScreen implements Screen {
 
     private void logic() {
         // Local variable for world dimensions
-        float worldWidth = viewport.getWorldWidth();
-        float worldHeight = viewport.getWorldHeight();
+        float worldWidth = game.viewport.getWorldWidth();
+        float worldHeight = game.viewport.getWorldHeight();
 
         // Bucket size dimensions
         float bucketWidth = bucketSprite.getWidth();
@@ -159,22 +157,22 @@ public class GameScreen implements Screen {
 
     private void draw() {
         ScreenUtils.clear(Color.BLACK); // Clears the screen each frame
-        viewport.apply();
-        batch.setProjectionMatrix(viewport.getCamera().combined);
-        batch.begin(); // where we draw our images
+        game.viewport.apply();
+        game.batch.setProjectionMatrix(game.viewport.getCamera().combined);
+        game.batch.begin(); // where we draw our images
 
-        float worldWidth = viewport.getWorldWidth();
-        float worldHeight = viewport.getWorldHeight();
+        float worldWidth = game.viewport.getWorldWidth();
+        float worldHeight = game.viewport.getWorldHeight();
 
-        batch.draw(backgroundTexture, 0, 0, worldWidth, worldHeight);
-        bucketSprite.draw(batch); // Sprites have their own draw method
+        game.batch.draw(backgroundTexture, 0, 0, worldWidth, worldHeight);
+        bucketSprite.draw(game.batch); // Sprites have their own draw method
 
         // Drop gold
         for (Sprite dropGold : dropGoldPieces) {
-            dropGold.draw(batch);
+            dropGold.draw(game.batch);
         }
 
-        batch.end();
+        game.batch.end();
     }
 
     @Override
