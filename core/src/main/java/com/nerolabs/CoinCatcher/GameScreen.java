@@ -4,6 +4,7 @@ import com.badlogic.gdx.ApplicationAdapter;
 //import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
@@ -18,13 +19,10 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 
-import java.awt.*;
+public class GameScreen implements Screen {
+    final Drop game;
 
-/** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
-public class Main extends ApplicationAdapter {
-    private SpriteBatch batch;
     private Texture image;
-    FitViewport viewport;
     Texture backgroundTexture;
     Texture bucketTexture;
     Sprite bucketSprite;
@@ -37,37 +35,47 @@ public class Main extends ApplicationAdapter {
     Sound dropSound;
     Music music;
 
-    @Override
-    public void create() {
-        batch = new SpriteBatch();
-        viewport = new FitViewport(8, 5);
+    public GameScreen(final Drop game) {
+        this.game = game;
+
+        // Load in game images
         backgroundTexture = new Texture("background.png");
         bucketTexture = new Texture("Bucket.png");
         coinTexture = new Texture("GoldCoin.png");
+
+        // Load audio and bg music
         dropSound = Gdx.audio.newSound(Gdx.files.internal("retroCoinNoise.mp3"));
         music = Gdx.audio.newMusic(Gdx.files.internal("CoinCatcherMusic.mp3"));
-        bucketSprite = new Sprite(bucketTexture);
-        bucketSprite.setSize(1,1);
-        touchPos = new Vector2();
-        dropGoldPieces = new Array<>();
-        bucketRectangle = new Rectangle();
-        dropRectangle = new Rectangle();
         music.setLooping(true);
         music.setVolume(.5f);
-        music.play();
 
+        bucketSprite = new Sprite(bucketTexture);
+        bucketSprite.setSize(1,1);
+
+        touchPos = new Vector2();
+
+        bucketRectangle = new Rectangle();
+        dropRectangle = new Rectangle();
+
+        dropGoldPieces = new Array<>();
+
+    }
+
+    @Override
+    public void show() {
+        music.play();
+    }
+
+    @Override
+    public void render(float delta) {
+        input();
+        logic();
+        draw();
     }
 
     @Override
     public void resize(int width, int height) {
-        viewport.update(width, height, true); // true centers the camera
-    }
-
-    @Override
-    public void render() {
-        input();
-        logic();
-        draw();
+        game.viewport.update(width, height, true); // true centers the camera
     }
 
     private void input() {
@@ -85,7 +93,7 @@ public class Main extends ApplicationAdapter {
         // Mouse Controls here
         if (Gdx.input.isTouched()) {
             touchPos.set(Gdx.input.getX(), Gdx.input.getY()); // Get where the touch happened on screen
-            viewport.unproject(touchPos); // Convert the units to the world units of the viewport
+            game.viewport.unproject(touchPos); // Convert the units to the world units of the viewport
             bucketSprite.setCenterX(touchPos.x); // Change the horizontally centered position of the bucket
         }
 
@@ -94,8 +102,8 @@ public class Main extends ApplicationAdapter {
     private void createGold() {
         float dropHeight = 1f;
         float dropWidth = 1f;
-        float worldWidth = viewport.getWorldWidth();
-        float worldHeight = viewport.getWorldHeight();
+        float worldWidth = game.viewport.getWorldWidth();
+        float worldHeight = game.viewport.getWorldHeight();
 
         // Create gold drop
         Sprite dropGold = new Sprite(coinTexture);
@@ -107,8 +115,8 @@ public class Main extends ApplicationAdapter {
 
     private void logic() {
         // Local variable for world dimensions
-        float worldWidth = viewport.getWorldWidth();
-        float worldHeight = viewport.getWorldHeight();
+        float worldWidth = game.viewport.getWorldWidth();
+        float worldHeight = game.viewport.getWorldHeight();
 
         // Bucket size dimensions
         float bucketWidth = bucketSprite.getWidth();
@@ -149,27 +157,43 @@ public class Main extends ApplicationAdapter {
 
     private void draw() {
         ScreenUtils.clear(Color.BLACK); // Clears the screen each frame
-        viewport.apply();
-        batch.setProjectionMatrix(viewport.getCamera().combined);
-        batch.begin(); // where we draw our images
+        game.viewport.apply();
+        game.batch.setProjectionMatrix(game.viewport.getCamera().combined);
+        game.batch.begin(); // where we draw our images
 
-        float worldWidth = viewport.getWorldWidth();
-        float worldHeight = viewport.getWorldHeight();
+        float worldWidth = game.viewport.getWorldWidth();
+        float worldHeight = game.viewport.getWorldHeight();
 
-        batch.draw(backgroundTexture, 0, 0, worldWidth, worldHeight);
-        bucketSprite.draw(batch); // Sprites have their own draw method
+        game.batch.draw(backgroundTexture, 0, 0, worldWidth, worldHeight);
+        bucketSprite.draw(game.batch); // Sprites have their own draw method
 
         // Drop gold
         for (Sprite dropGold : dropGoldPieces) {
-            dropGold.draw(batch);
+            dropGold.draw(game.batch);
         }
 
-        batch.end();
+        game.batch.end();
+    }
+
+    @Override
+    public void hide() {
+    }
+
+    @Override
+    public void pause() {
+    }
+
+    @Override
+    public void resume() {
     }
 
     @Override
     public void dispose() {
-        batch.dispose();
-        image.dispose();
+        backgroundTexture.dispose();
+        dropSound.dispose();
+        music.dispose();
+        coinTexture.dispose();
+        bucketTexture.dispose();
     }
+
 }
